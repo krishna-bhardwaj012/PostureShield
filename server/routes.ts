@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Store frame data
             const frameData = insertPoseDetectionFrameSchema.parse({
               sessionId: ws.sessionId,
-              timestamp: poseData.timestamp,
+              timestamp: Math.floor(poseData.timestamp / 1000), // Convert to seconds
               poseData: poseData.landmarks,
               analysisResult,
               violationType: analysisResult.violations.length > 0 ? analysisResult.violations[0].type : null,

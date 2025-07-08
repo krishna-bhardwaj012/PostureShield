@@ -39,7 +39,7 @@ export function VideoInput({ onPoseData, analysisResult, isAnalyzing }: VideoInp
         z: Math.random(),
         visibility: 0.8 + Math.random() * 0.2,
       })),
-      timestamp: Date.now(),
+      timestamp: Math.floor(Date.now() / 1000), // Convert to seconds
     };
 
     onPoseData(mockPoseData);

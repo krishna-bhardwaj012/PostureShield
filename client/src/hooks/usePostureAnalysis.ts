@@ -76,6 +76,7 @@ export function usePostureAnalysis(options: UsePostureAnalysisOptions) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          userId: null,
           analysisMode: options.analysisMode,
           feedbackType: options.feedbackType,
           duration: 0,

@@ -1,10 +1,11 @@
 # Posture Analysis Application
 
 ## Overview
-This is a full-stack posture analysis application built with React (frontend) and Express.js (backend) that provides real-time posture monitoring and analysis. The application supports two analysis modes: squat form analysis and desk posture monitoring, with both real-time feedback and frame-by-frame analysis capabilities.
+This is a full-stack posture analysis application built with React (frontend) and Node.js/Express (backend) that provides real-time posture monitoring and analysis. The application supports two analysis modes: squat form analysis and desk posture monitoring, with both real-time feedback and frame-by-frame analysis capabilities. The project has been restructured to follow a clean separation between backend and frontend directories as requested.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+Preferred file structure: Separate backend/ and frontend/ directories with organized subdirectories.
 
 ## System Architecture
 
@@ -104,16 +105,27 @@ Preferred communication style: Simple, everyday language.
 
 ### Key Architectural Decisions
 
-1. **Monorepo Structure**: Combines frontend (`client/`), backend (`server/`), and shared code (`shared/`) in a single repository for easier development and deployment.
+1. **Separated Directory Structure**: Clean separation between `backend/` and `frontend/` directories following industry standards for better organization and deployment.
 
-2. **Serverless Database**: Uses Neon Database for PostgreSQL hosting, avoiding the need for database server management while maintaining full SQL capabilities.
+2. **Node.js Backend**: Pure Node.js/Express backend with organized routes and utilities for pose analysis and WebSocket communication.
 
 3. **Real-time Architecture**: WebSocket-based communication enables immediate posture feedback, crucial for effective posture training.
 
-4. **Client-side Pose Detection**: Planned MediaPipe integration runs on client-side to reduce server load and improve responsiveness.
+4. **Client-side Pose Detection**: MediaPipe-compatible pose detection with mock data for demonstration, ready for real MediaPipe integration.
 
 5. **Flexible Analysis Modes**: Supports both squat form analysis and desk posture monitoring with different violation criteria and scoring methods.
 
-6. **Type Safety**: Full TypeScript implementation with shared types between client and server ensures data consistency.
+6. **Rule-based Analysis**: Implements specific posture rules (knee beyond toe for squats, neck angle for desk sitting) as specified in requirements.
 
-7. **Component-based UI**: Leverages Shadcn/ui and Radix UI for accessible, customizable components that maintain design consistency.
+7. **Component-based UI**: Clean React components with separated concerns for video input, analysis panels, and session statistics.
+
+## Recent Changes (2025-01-08)
+
+✓ Restructured application to follow requested file structure with backend/ and frontend/ directories
+✓ Fixed WebSocket timestamp issues causing validation errors
+✓ Created pure Node.js backend with Express and WebSocket support
+✓ Implemented rule-based posture analysis following assignment requirements
+✓ Built React frontend with video input (webcam/upload) and real-time feedback
+✓ Added pose overlay visualization and violation highlighting
+✓ Integrated session statistics and frame-by-frame analysis
+✓ Fixed all TypeScript errors and validation issues

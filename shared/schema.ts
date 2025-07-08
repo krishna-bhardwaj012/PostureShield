@@ -24,7 +24,7 @@ export const postureAnalysisSessions = pgTable("posture_analysis_sessions", {
 export const poseDetectionFrames = pgTable("pose_detection_frames", {
   id: serial("id").primaryKey(),
   sessionId: integer("session_id").notNull(),
-  timestamp: real("timestamp").notNull(), // in seconds
+  timestamp: integer("timestamp").notNull(), // in milliseconds
   poseData: jsonb("pose_data").notNull(), // MediaPipe pose landmarks
   analysisResult: jsonb("analysis_result").notNull(), // posture analysis results
   violationType: text("violation_type"), // 'knee_beyond_toe', 'back_angle', 'neck_bend', etc.

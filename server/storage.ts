@@ -62,6 +62,9 @@ export class MemStorage implements IStorage {
     const newSession: PostureAnalysisSession = {
       ...session,
       id,
+      userId: session.userId || null,
+      warningCount: session.warningCount || 0,
+      violationCount: session.violationCount || 0,
       createdAt: new Date(),
     };
     this.postureAnalysisSessions.set(id, newSession);
@@ -76,7 +79,10 @@ export class MemStorage implements IStorage {
     const session = this.postureAnalysisSessions.get(id);
     if (!session) return undefined;
     
-    const updatedSession = { ...session, ...updates };
+    const updatedSession = { 
+      ...session, 
+      ...updates
+    };
     this.postureAnalysisSessions.set(id, updatedSession);
     return updatedSession;
   }
@@ -86,6 +92,8 @@ export class MemStorage implements IStorage {
     const newFrame: PoseDetectionFrame = {
       ...frame,
       id,
+      violationType: frame.violationType || null,
+      violationSeverity: frame.violationSeverity || null,
       createdAt: new Date(),
     };
     this.poseDetectionFrames.set(id, newFrame);
