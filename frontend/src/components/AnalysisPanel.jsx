@@ -16,7 +16,10 @@ const AnalysisPanel = ({
   };
 
   const getViolationIcon = (severity) => {
-    return severity === 'error' ? '❌' : '⚠️';
+    if (severity === 'error') return '❌';
+    if (severity === 'warning') return '⚠️';
+    if (severity === 'good') return '✅';
+    return '❓';
   };
 
   return (

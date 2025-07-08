@@ -17,15 +17,49 @@ const VideoInput = ({ onPoseData, analysisResult, isAnalyzing }) => {
     if (!video || !onPoseData) return;
 
     // In a real implementation, you would use MediaPipe here
-    // For now, we'll simulate pose detection with mock data
+    // For now, we'll simulate pose detection with realistic mock data that triggers violations
+    
+    // Simulate different posture scenarios
+    const scenarios = [
+      // Good squat posture
+      { kneeOverToe: false, backAngle: 155, neckAngle: 25, scenario: 'good_squat' },
+      // Bad squat: knee over toe
+      { kneeOverToe: true, backAngle: 155, neckAngle: 25, scenario: 'knee_violation' },
+      // Bad squat: rounded back
+      { kneeOverToe: false, backAngle: 140, neckAngle: 25, scenario: 'back_violation' },
+      // Good desk posture
+      { kneeOverToe: false, backAngle: 165, neckAngle: 20, scenario: 'good_desk' },
+      // Bad desk: forward head
+      { kneeOverToe: false, backAngle: 165, neckAngle: 45, scenario: 'neck_violation' },
+      // Bad desk: slouching
+      { kneeOverToe: false, backAngle: 145, neckAngle: 20, scenario: 'slouch_violation' }
+    ];
+    
+    const currentScenario = scenarios[Math.floor(Date.now() / 5000) % scenarios.length];
+    
     const mockPoseData = {
-      landmarks: Array.from({ length: 33 }, (_, i) => ({
-        x: Math.random(),
-        y: Math.random(),
-        z: Math.random(),
-        visibility: 0.8 + Math.random() * 0.2,
-      })),
-      timestamp: Math.floor(Date.now() / 1000), // Convert to seconds
+      landmarks: Array.from({ length: 33 }, (_, i) => {
+        // Create realistic landmark positions based on scenario
+        let x = 0.3 + Math.random() * 0.4; // Center the person
+        let y = 0.2 + Math.random() * 0.6;
+        
+        // Adjust specific landmarks based on violation scenario
+        if (i === 25 && currentScenario.kneeOverToe) { // LEFT_KNEE
+          x = 0.65; // Move knee forward
+        }
+        if (i === 31 && currentScenario.kneeOverToe) { // LEFT_FOOT_INDEX  
+          x = 0.6; // Keep toe behind knee
+        }
+        
+        return {
+          x: x,
+          y: y,
+          z: Math.random() * 0.1,
+          visibility: 0.8 + Math.random() * 0.2,
+        };
+      }),
+      timestamp: Math.floor(Date.now() / 1000),
+      scenario: currentScenario.scenario // For debugging
     };
 
     onPoseData(mockPoseData);
@@ -187,21 +221,51 @@ const VideoInput = ({ onPoseData, analysisResult, isAnalyzing }) => {
           onPause={() => setIsPlaying(false)}
         />
 
-        {/* Feedback Overlays */}
-        {analysisResult && analysisResult.violations.length > 0 && (
-          <div style={{ position: 'absolute', top: '20px', left: '20px' }}>
-            <div className="feedback-badge error">
-              Bad Posture Detected
-            </div>
-            {analysisResult.violations.slice(0, 2).map((violation, index) => (
-              <div
-                key={index}
-                className={`feedback-badge ${violation.severity}`}
-                style={{ marginTop: '10px' }}
-              >
-                {violation.message}
+        {/* Live Posture Feedback Overlays */}
+        {analysisResult && (
+          <div style={{ position: 'absolute', top: '20px', left: '20px', right: '20px' }}>
+            {analysisResult.violations.filter(v => v.severity !== 'good').length > 0 ? (
+              <>
+                <div className="feedback-badge error" style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                  🚨 POSTURE VIOLATION DETECTED
+                </div>
+                {analysisResult.violations
+                  .filter(v => v.severity !== 'good')
+                  .slice(0, 2)
+                  .map((violation, index) => (
+                    <div
+                      key={index}
+                      className={`feedback-badge ${violation.severity}`}
+                      style={{ 
+                        marginTop: '10px',
+                        fontSize: '14px',
+                        maxWidth: '300px',
+                        lineHeight: '1.3'
+                      }}
+                    >
+                      {violation.message}
+                    </div>
+                  ))}
+              </>
+            ) : (
+              <div className="feedback-badge good" style={{ fontSize: '16px', fontWeight: 'bold' }}>
+                ✅ EXCELLENT POSTURE!
               </div>
-            ))}
+            )}
+            
+            {/* Show current analysis mode */}
+            <div style={{
+              position: 'absolute',
+              top: '0',
+              right: '0',
+              background: 'rgba(0,0,0,0.7)',
+              color: 'white',
+              padding: '5px 10px',
+              borderRadius: '4px',
+              fontSize: '12px'
+            }}>
+              {analysisResult.analysisMode === 'squat' ? '🏋️ SQUAT MODE' : '💺 DESK MODE'}
+            </div>
           </div>
         )}
 

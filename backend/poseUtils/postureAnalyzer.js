@@ -93,6 +93,7 @@ function checkKneeToeToePosition(landmarks) {
   const leftFootIndex = landmarks[POSE_LANDMARKS.LEFT_FOOT_INDEX];
   const rightFootIndex = landmarks[POSE_LANDMARKS.RIGHT_FOOT_INDEX];
   
+  // Check if knee extends beyond toe (knee should NOT go beyond toe)
   const leftKneeOverToe = leftKnee.x > leftFootIndex.x;
   const rightKneeOverToe = rightKnee.x > rightFootIndex.x;
   
@@ -104,8 +105,8 @@ function checkKneeToeToePosition(landmarks) {
     
     return {
       type: 'knee_beyond_toe',
-      severity: distance > 0.1 ? 'error' : 'warning',
-      message: 'Knee extends beyond toe',
+      severity: distance > 0.05 ? 'error' : 'warning',
+      message: '❌ SQUAT RULE VIOLATION: Knee should NOT extend beyond toe',
       jointIndices: [POSE_LANDMARKS.LEFT_KNEE, POSE_LANDMARKS.RIGHT_KNEE, POSE_LANDMARKS.LEFT_FOOT_INDEX, POSE_LANDMARKS.RIGHT_FOOT_INDEX],
     };
   }
@@ -115,16 +116,26 @@ function checkKneeToeToePosition(landmarks) {
 
 function calculateOverallScore(violations) {
   let score = 100;
+  let errorCount = 0;
+  let warningCount = 0;
+  let goodCount = 0;
   
   for (const violation of violations) {
     if (violation.severity === 'error') {
-      score -= 20;
+      score -= 25;
+      errorCount++;
     } else if (violation.severity === 'warning') {
       score -= 10;
+      warningCount++;
+    } else if (violation.severity === 'good') {
+      goodCount++;
+      // Bonus points for good posture
+      score += 5;
     }
   }
   
-  return Math.max(0, score);
+  // Cap the score between 0 and 100
+  return Math.max(0, Math.min(100, score));
 }
 
 function analyzeSquatPosture(poseData) {
@@ -146,11 +157,20 @@ function analyzeSquatPosture(poseData) {
   const backAngle = calculateBackAngle(landmarks);
   metrics.backAngle = backAngle;
   
+  // SQUAT RULE: Back angle should be ≥150°
   if (backAngle < 150) {
     violations.push({
       type: 'back_angle',
       severity: backAngle < 130 ? 'error' : 'warning',
-      message: `Back angle too low: ${backAngle.toFixed(1)}°`,
+      message: `❌ SQUAT RULE VIOLATION: Back angle should be ≥150° (Current: ${backAngle.toFixed(1)}°)`,
+      jointIndices: [POSE_LANDMARKS.LEFT_SHOULDER, POSE_LANDMARKS.RIGHT_SHOULDER, POSE_LANDMARKS.LEFT_HIP, POSE_LANDMARKS.RIGHT_HIP],
+    });
+  } else {
+    // Good posture feedback
+    violations.push({
+      type: 'good_back_angle',
+      severity: 'good',
+      message: `✅ GOOD: Back angle is proper (${backAngle.toFixed(1)}°)`,
       jointIndices: [POSE_LANDMARKS.LEFT_SHOULDER, POSE_LANDMARKS.RIGHT_SHOULDER, POSE_LANDMARKS.LEFT_HIP, POSE_LANDMARKS.RIGHT_HIP],
     });
   }
@@ -199,7 +219,7 @@ function analyzeDeskPosture(poseData) {
     };
   }
   
-  // Check neck bend angle
+  // Check neck bend angle - DESK RULE: Neck bend should be ≤30°
   const neckAngle = calculateNeckAngle(landmarks);
   metrics.neckAngle = neckAngle;
   
@@ -207,20 +227,35 @@ function analyzeDeskPosture(poseData) {
     violations.push({
       type: 'neck_bend',
       severity: neckAngle > 45 ? 'error' : 'warning',
-      message: `Neck bent forward: ${neckAngle.toFixed(1)}°`,
+      message: `❌ DESK RULE VIOLATION: Neck bend should be ≤30° (Current: ${neckAngle.toFixed(1)}°)`,
+      jointIndices: [POSE_LANDMARKS.NOSE, POSE_LANDMARKS.LEFT_SHOULDER, POSE_LANDMARKS.RIGHT_SHOULDER],
+    });
+  } else {
+    violations.push({
+      type: 'good_neck_position',
+      severity: 'good',
+      message: `✅ GOOD: Neck position is proper (${neckAngle.toFixed(1)}°)`,
       jointIndices: [POSE_LANDMARKS.NOSE, POSE_LANDMARKS.LEFT_SHOULDER, POSE_LANDMARKS.RIGHT_SHOULDER],
     });
   }
   
-  // Check spine alignment
+  // Check spine alignment - DESK RULE: Back should remain straight
   const backAngle = calculateBackAngle(landmarks);
   metrics.backAngle = backAngle;
+  metrics.spineAlignment = backAngle;
   
   if (backAngle < 160) {
     violations.push({
       type: 'spine_alignment',
       severity: backAngle < 140 ? 'error' : 'warning',
-      message: 'Poor spine alignment detected',
+      message: `❌ DESK RULE VIOLATION: Back should remain straight (Current alignment: ${backAngle.toFixed(1)}°)`,
+      jointIndices: [POSE_LANDMARKS.LEFT_SHOULDER, POSE_LANDMARKS.RIGHT_SHOULDER, POSE_LANDMARKS.LEFT_HIP, POSE_LANDMARKS.RIGHT_HIP],
+    });
+  } else {
+    violations.push({
+      type: 'good_spine_alignment',
+      severity: 'good',
+      message: `✅ GOOD: Back is straight (${backAngle.toFixed(1)}°)`,
       jointIndices: [POSE_LANDMARKS.LEFT_SHOULDER, POSE_LANDMARKS.RIGHT_SHOULDER, POSE_LANDMARKS.LEFT_HIP, POSE_LANDMARKS.RIGHT_HIP],
     });
   }
