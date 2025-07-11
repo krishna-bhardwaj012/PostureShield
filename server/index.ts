@@ -24,9 +24,11 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
+
       if (logLine.length > 80) {
         logLine = logLine.slice(0, 79) + "…";
       }
+
       log(logLine);
     }
   });
@@ -50,15 +52,11 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ✅ Update: Dynamic PORT + 0.0.0.0 for Render
+  // Use dynamic port for deployment and fallback to 5000
   const port = parseInt(process.env.PORT || "5000");
-  server.listen(
-    {
-      port,
-      host: "0.0.0.0",
-    },
-    () => {
-      log(`Server running on http://0.0.0.0:${port}`);
-    }
-  );
+  const host = process.env.HOST || "127.0.0.1"; // works on Windows
+
+  server.listen({ port, host }, () => {
+    log(`🚀 Serving on http://${host}:${port}`);
+  });
 })();
