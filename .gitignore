@@ -1,6 +1,29 @@
-node_modules
-dist
+# Node dependencies
+node_modules/
+
+# Build output
+dist/
+uploads/
+build/
+
+# Logs
+*.log
+
+# System files
 .DS_Store
-server/public
+Thumbs.db
+
+# Vite & Config files (optional to ignore — usually not needed)
 vite.config.ts.*
 *.tar.gz
+
+# Public server uploads (optional, depends on use)
+server/public/
+
+# Environment files (if any)
+.env
+.env.*  # in case you have .env.local etc.
+
+# IDE/editor stuff
+.vscode/
+.idea/

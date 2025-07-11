@@ -1,3 +1,4 @@
+// Pose landmark structure
 export interface PoseLandmark {
   x: number;
   y: number;
@@ -5,26 +6,33 @@ export interface PoseLandmark {
   visibility: number;
 }
 
+// Raw pose frame
 export interface PoseData {
   landmarks: PoseLandmark[];
   timestamp: number;
 }
 
+// Posture rule violation structure
 export interface PostureViolation {
   type: string;
-  severity: 'warning' | 'error';
+  severity: 'warning' | 'error' | 'good'; // ✅ added 'good'
   message: string;
   jointIndices: number[];
 }
 
+// Pose metric details
 export interface PostureMetrics {
   backAngle?: number;
   kneeAngle?: number;
   neckAngle?: number;
   kneeToeToeDistance?: number;
   spineAlignment?: number;
+  overallScore?: number;      // ✅ optional in analysis step
+  consistency?: number;       // ✅ added for stats
+  formQuality?: number;       // ✅ added for stats
 }
 
+// Analysis result per session or video
 export interface PostureAnalysisResult {
   analysisMode: 'squat' | 'desk';
   overallScore: number;
@@ -32,23 +40,26 @@ export interface PostureAnalysisResult {
   metrics: PostureMetrics;
 }
 
+// Session-wide calculated statistics
 export interface SessionStats {
   duration: number;
   goodPosturePercentage: number;
   warningCount: number;
   violationCount: number;
   overallScore: number;
-  consistency: number;
-  formQuality: number;
+  consistency: number;      // ✅ new stat
+  formQuality: number;      // ✅ new stat
 }
 
+// Optional: timeline chart
 export interface AnalysisFrame {
   timestamp: number;
   violationType?: string;
-  severity?: 'warning' | 'error';
+  severity?: 'warning' | 'error' | 'good';
   message: string;
 }
 
+// MediaPipe landmark index mapping
 export const POSE_LANDMARKS = {
   NOSE: 0,
   LEFT_EYE_INNER: 1,

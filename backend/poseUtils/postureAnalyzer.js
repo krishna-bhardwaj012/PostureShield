@@ -1,3 +1,5 @@
+const { join } = require("path/win32");
+
 // MediaPipe pose landmark indices
 const POSE_LANDMARKS = {
   NOSE: 0,
@@ -81,7 +83,7 @@ function calculateNeckAngle(landmarks) {
   const verticalVector = { x: 0, y: -1 };
   
   const dotProduct = neckVector.x * verticalVector.x + neckVector.y * verticalVector.y;
-  const magnitude = Math.sqrt(neckVector.x * neckVector.x + neckVector.y * neckVector.y);
+  const magnitude = Math.sqrt(neckVector.x ** 2 +   neckVector.y ** 2);
   
   const cosAngle = dotProduct / magnitude;
   return Math.acos(Math.max(-1, Math.min(1, cosAngle))) * 180 / Math.PI;
@@ -116,6 +118,33 @@ function checkKneeToeToePosition(landmarks) {
 
 function calculateOverallScore(violations) {
   let score = 100;
+  for (const violation of violations) {
+    if (violation.severity === 'error') score -= 25;
+    else if (violation.severity === 'warning') score -= 10;
+    else if (violation.severity === 'good') score += 5; // Bonus
+  }
+  return Math.max(0, Math.min(100, score));
+}
+function isPoseValid(landmarks) {
+  const MIN_VISIBILITY = 0.5;
+  return landmarks.filter(l => l.visibility && l.visibility >= MIN_VISIBILITY).length >= 33;
+}
+
+function analyzeSquatPosture(poseData) {
+  const { landmarks } = poseData;
+  const violations = [];
+  const metrics = {};
+
+  if (!landmarks || landmarks.length < 33 || !isPoseValid(landmarks)) {
+    return {
+      analysisMode: 'squat',
+      overallScore: 0,
+      violations: [{ type: 'pose_detection_failed', severity: 'error', message: 'Unable to detect a valid human pose in the video. ',
+        jointIndices : [],
+       }],
+      metrics: {},
+    };
+  }
   let errorCount = 0;
   let warningCount = 0;
   let goodCount = 0;
@@ -194,12 +223,11 @@ function analyzeSquatPosture(poseData) {
   );
   metrics.kneeAngle = Math.min(leftKneeAngle, rightKneeAngle);
   
-  // Calculate overall score
-  const overallScore = calculateOverallScore(violations);
+  
   
   return {
     analysisMode: 'squat',
-    overallScore,
+    overallScore:calculateOverallScore(violations),
     violations,
     metrics,
   };
@@ -228,14 +256,14 @@ function analyzeDeskPosture(poseData) {
       type: 'neck_bend',
       severity: neckAngle > 45 ? 'error' : 'warning',
       message: `❌ DESK RULE VIOLATION: Neck bend should be ≤30° (Current: ${neckAngle.toFixed(1)}°)`,
-      jointIndices: [POSE_LANDMARKS.NOSE, POSE_LANDMARKS.LEFT_SHOULDER, POSE_LANDMARKS.RIGHT_SHOULDER],
+      jointIndices: [0, 11, 12],
     });
   } else {
     violations.push({
       type: 'good_neck_position',
       severity: 'good',
       message: `✅ GOOD: Neck position is proper (${neckAngle.toFixed(1)}°)`,
-      jointIndices: [POSE_LANDMARKS.NOSE, POSE_LANDMARKS.LEFT_SHOULDER, POSE_LANDMARKS.RIGHT_SHOULDER],
+      jointIndices:[0, 11, 12], 
     });
   }
   
@@ -244,27 +272,27 @@ function analyzeDeskPosture(poseData) {
   metrics.backAngle = backAngle;
   metrics.spineAlignment = backAngle;
   
-  if (backAngle < 160) {
-    violations.push({
-      type: 'spine_alignment',
-      severity: backAngle < 140 ? 'error' : 'warning',
-      message: `❌ DESK RULE VIOLATION: Back should remain straight (Current alignment: ${backAngle.toFixed(1)}°)`,
-      jointIndices: [POSE_LANDMARKS.LEFT_SHOULDER, POSE_LANDMARKS.RIGHT_SHOULDER, POSE_LANDMARKS.LEFT_HIP, POSE_LANDMARKS.RIGHT_HIP],
-    });
-  } else {
-    violations.push({
-      type: 'good_spine_alignment',
-      severity: 'good',
-      message: `✅ GOOD: Back is straight (${backAngle.toFixed(1)}°)`,
-      jointIndices: [POSE_LANDMARKS.LEFT_SHOULDER, POSE_LANDMARKS.RIGHT_SHOULDER, POSE_LANDMARKS.LEFT_HIP, POSE_LANDMARKS.RIGHT_HIP],
-    });
-  }
+if (backAngle < 160) {
+  violations.push({
+    type: 'spine_alignment',
+    severity: backAngle < 140 ? 'error' : 'warning',
+    message: `❌ DESK RULE VIOLATION: Back should remain straight (Current alignment: ${backAngle.toFixed(1)}°)`,
+    jointIndices: [11, 12, 23, 24],
+  });
+} else {
+  violations.push({
+    type: 'good_spine_alignment',
+    severity: 'good',
+    message: `✅ GOOD: Back is straight (${backAngle.toFixed(1)}°)`,
+    jointIndices: [11, 12, 23, 24],
+  });
+}
   
-  const overallScore = calculateOverallScore(violations);
+  
   
   return {
     analysisMode: 'desk',
-    overallScore,
+    overallScore: calculateOverallScore(violations),
     violations,
     metrics,
   };
